@@ -1,0 +1,16 @@
+# git
+.git
+.gitignore
+
+# Docker
+.docker
+
+# built versions
+build
+dist
+
+# node.js
+node_modules
+
+README.md
+LICENSE

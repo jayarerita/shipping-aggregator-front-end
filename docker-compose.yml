@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  proxy:
+    build: 
+      dockerfile: Dockerfile
+      context: .
+    restart: always
+    env_file:
+      - ./dev.env
+    ports:
+      - 81:80
+      
+  
