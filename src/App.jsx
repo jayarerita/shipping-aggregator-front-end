@@ -36,6 +36,10 @@ const Container = styled.div.attrs({
     className: 'py-4',
 })``
 
+const VersionInfo = styled.div.attrs({
+    className: 'text-xs text-center text-gray-500 absolute bottom-0 right-0 mr-2 mb-2',
+})``
+
 const numOfWeeks = 2; // # of weeks the calendar will display
 const startingWeek = 1; // The weeks # where today should be located
 
@@ -232,6 +236,9 @@ function App () {
                     {dayShipmentElements}</>
                     }
                 </div>
+                <VersionInfo>
+                    {import.meta.env.PROD ? `Production v${import.meta.env.APP_VERSION}` : `Development v0.0.0`}
+                </VersionInfo>
             </Container>)
         }
         </>
