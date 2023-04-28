@@ -20,7 +20,7 @@ on:
 
 env:
   AWS_REGION: us-gov-west-1                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY_APP: shipping-aggregator-app          # set this to your Amazon ECR repository name
+  ECR_REPOSITORY_APP: shipping-aggregator-front-end          # set this to your Amazon ECR repository name
   ECS_SERVICE: shipping-aggregator                # set this to your Amazon ECS service name
   ECS_CLUSTER: shipping-aggregator                # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ./aws/ecs_deploy.json # set this to the path to your Amazon ECS task definition
@@ -65,22 +65,22 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY_APP:$IMAGE_TAG
           echo "APP_IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY_APP:$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Render Amazon ECS task definition for the app container
-        id: render-app-container
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME_APP }}
-          image: ${{ env.APP_IMAGE }}
-          environment-variables: |
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            APP_VERSION=${{ env.VERSION }}
+      # - name: Render Amazon ECS task definition for the app container
+      #   id: render-app-container
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: ${{ env.ECS_TASK_DEFINITION }}
+      #     container-name: ${{ env.CONTAINER_NAME_APP }}
+      #     image: ${{ env.APP_IMAGE }}
+      #     environment-variables: |
+      #       AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+      #       AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #       APP_VERSION=${{ env.VERSION }}
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1.4.10
-        with:
-          task-definition: ${{ steps.render-proxy-container.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      # - name: Deploy Amazon ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1.4.10
+      #   with:
+      #     task-definition: ${{ steps.render-proxy-container.outputs.task-definition }}
+      #     service: ${{ env.ECS_SERVICE }}
+      #     cluster: ${{ env.ECS_CLUSTER }}
+      #     wait-for-service-stability: true
