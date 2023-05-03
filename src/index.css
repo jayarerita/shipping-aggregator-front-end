@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Used to prevent tailwind from overriding the base styles  of the amplify ui components */
+@layer base {
+  button {
+    background-color: reset;
+    color: reset;
+  }
+}
+
 html {
   @apply h-[200vh] bg-gradient-to-br from-thril-grey to-slate-100;
 }
@@ -25,11 +33,11 @@ code {
 }
 
 .btn-primary {
-  @apply bg-thril-red text-black hover:text-white font-semibold transition;
+  @apply bg-thril-red text-black font-semibold transition;
 }
 
 .btn-secondary {
-  @apply bg-thril-red-dark text-white hover:text-thril-red-light font-semibold transition;
+  @apply bg-thril-red-dark text-white font-semibold transition;
 }
 
 .login-form label {
