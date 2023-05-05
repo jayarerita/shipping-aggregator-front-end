@@ -19,7 +19,7 @@
       "function": {
         "shipagg28ea9428a": {
           "deploymentBucketName": "amplify-shipagg2-dev-160440-deployment",
-          "s3Key": "amplify-builds/shipagg28ea9428a-7a4f742f48303235752f-build.zip"
+          "s3Key": "amplify-builds/shipagg28ea9428a-56364b6947754655772f-build.zip"
         }
       },
       "api": {

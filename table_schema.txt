@@ -1,0 +1,122 @@
+PK                            SK                              TYPE          VALUE
+----------------------------------------------------------------------------------------------------------------------
+CARRIER#<code>                CARRIER#<code>                   Data         {json}
+SHIPMENT#<id>                 SHIPMENT#<id>                    Data         {json}
+SHIPMENT#<id>                 ITEM#<item_number>               Data         {json}
+SHIPMENT#<id>                 SHIPMENT_EST_DELIVERY#<id>       Data         datetime
+SHIPMENT_STATUS#<name>        SHIPMENT_STATUS#<name>           Data         {json}
+SHIPMENT#<id>                 SHIPMENT_STATUS#<name>           Data         {json}
+
+Data structure for each stored object
+----------------------------------------------------------------------------
+CARRIER
+{
+    "name": {"type": "string", "maxLength": 64, "unique": true},
+    "description": {"type": "string", "maxLength": 512, "nullable": true},
+    "active": {"type": "boolean",  "default": false},
+    "created": {"type": "string",  "format": "date-time", "readOnly": true},
+    "code": {"type": "string", "maxLength": 8}
+}
+
+SHIPMENT_STATUS
+{
+    "name": {"type": "string", "maxLength": 64, "unique": true},
+    "description": {"type": "string", "maxLength": 512, "nullable": true},
+    "active": {"type": "boolean", "default": false},
+    "created": {"type": "string", "format": "date-time", "readOnly": true},
+    "carriers": {
+      "type": "array",
+      "items": {
+        [
+          "/items/carriers/<code>",
+          ...
+        ],
+      },
+      "description": "Carriers"
+    }
+},
+
+SHIPMENT
+
+{
+    "created": {"type": "string", "format": "date-time", "readOnly": true},
+    "shipper": {"type": "string", "maxLength": 256},
+    "shipped_on": {"type": "string", "format": "date-time", "nullable": true},
+    "delivery": {"type": "string", "format": "date-time", "nullable": true},
+    "est_delivery": {"type": "string", "format": "date", "nullable": true},
+    "pro": {"type": "string", "maxLength": 32, "nullable": true},
+    "status": {
+      "ref":"/items/shipment_status/<name>",
+    },
+    "carrier": {
+      "ref": "/items/carrier/<code>",
+    },
+    "destination": {"type": "string", "maxLength": 256, "nullable": true},
+    "owner": {"ref": "/items/organization"}
+},
+
+
+
+
+
+Example entries
+------------------------------------------------------------------------------
+PK: CARRIER#UPS
+SK: CARRIER#UPS
+VALUE: 
+{   
+    "name": "UPS",
+    "description": "United Parcel Service",
+    "active": "true",
+    "created": "2022-05-03",
+    "code": "UPS",
+}
+
+PK: SHIPMENT#1
+SK: SHIPMENT#1
+VALUE: 
+{   
+    "created": "2022-05-03T23:05:04.123Z",
+    ...
+}
+
+PK: SHIPMENT_STATUS#available
+SK: SHIPMENT_STATUS#available
+   
+PK: SHIPMENT#1
+SK: ITEM#123
+{
+    "item_number": 123,
+    "pallets": 4,
+    "part_number": "ABC123",
+    "quantity": 10.5,
+    "purchase_order": "PO-123",
+    "description": "Widget",
+    "shipment": {
+        "created": "2022-05-01T08:00:00Z",
+        "shipper": "Acme Corp",
+        "shipped_on": "2022-05-02T08:00:00Z",
+        "delivery": "2022-05-05T08:00:00Z",
+        "est_delivery": "2022-05-06",
+        "pro": "PRO-123",
+        "status": {
+            "name": "In Transit",
+            "description": "Package is in transit",
+            "active": true,
+            "created": "2022-05-01"
+        },
+        "carrier": {
+            "name": "UPS",
+            "description": "United Parcel Service",
+            "active": true,
+            "created": "2022-05-01",
+            "code": "UPS"
+        },
+        "destination": "123 Main St",
+        "owner": {
+            "name": "Acme Corp",
+            "description": "Manufacturer of widgets",
+            "created": "2022-05-01"
+        }
+    }
+}

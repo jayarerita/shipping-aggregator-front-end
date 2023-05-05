@@ -3,7 +3,7 @@ import { SyncLoader } from 'react-spinners';
 import styled from 'styled-components';
 
 const Day = styled.button.attrs({
-    className: "bg-white rounded-md hover:scale-105 shadow-lg",
+    className: "bg-white border-0 rounded-md hover:scale-105 shadow-lg p-0",
 })``;
 
 const DayName = styled.div.attrs({

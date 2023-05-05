@@ -1,15 +1,16 @@
 // components/Home.js
-import logo from '/src/assets/logo.png';
-export function Home() {
-  return (
-<div className='w-max mx-auto py-4'>
-    <div>
-        <img className='thril-logo w-48 md:w-96 mx-auto' src={logo} alt="Thril Logo" />
-    </div>
-    <div className='text-center'>
-        <h1>Incoming Shipments</h1>
-    </div>
-</div>
+import demoData from '../assets/example_data.js';
+import TwoWeekCalendar from './TwoWeekCalendar.jsx';
 
+export function Home() {
+
+  return (
+  <>
+    <h1 className='text-3xl text-center text-thril-red-dark font-bold'>Demo Data</h1>
+    <div className='w-max mx-auto'>
+      <h2 className='text-center'>Incoming Shipments</h2>
+    </div>
+    <TwoWeekCalendar shipments={demoData} />
+  </>
   );
 }

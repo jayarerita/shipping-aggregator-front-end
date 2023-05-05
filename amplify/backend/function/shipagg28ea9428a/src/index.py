@@ -1,150 +1,98 @@
 import json
 import boto3
+from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
+import decimal
 
-dynamodb = boto3.resource('dynamodb')
-table_name = 'ship_scrapings'
-table = dynamodb.Table(table_name)
+TABLE_NAME = 'ship_scrapings'
 
 def handler(event, context):
 
     http_method = event['httpMethod']
     if http_method == 'GET':
         response = handle_get_request(event)
-    elif http_method == 'POST':
-        response = handle_post_request(event)
-    elif http_method == 'PATCH':
-        response = handle_patch_request(event)
-    elif http_method == 'PUT':
-        response = handle_put_request(event)
-    elif http_method == 'DELETE':
-        response = handle_delete_request(event)
     else:
         response = {'statusCode': 400, 'body': 'Invalid HTTP method'}
     return response
 
 def handle_get_request(event):
+    # Get the organization id from the request
+    group = get_user_group(event)
+    org_id = group
     # Get item from DynamoDB table
-    item_id = event['queryStringParameters']['id']
-    response = table.get_item(Key={'id': item_id})
-    return {'statusCode': 200, 'body': json.dumps(response['Item'])}
+    start_date = event['queryStringParameters']['start_date']
+    end_date = event['queryStringParameters']['end_date']
+    results = query_shipments_by_dates(TABLE_NAME, org_id, start_date, end_date)
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET'
+        },
+        'body': json.dumps(results)}
 
-def handle_post_request(event):
-    # Add item to DynamoDB table
-    item = json.loads(event['body'])
-    table.put_item(Item=item)
-    return {'statusCode': 200, 'body': 'Item added successfully'}
+def convert_decimals(items):
+    for item in items:
+        for key in item:
+            if isinstance(item[key], decimal.Decimal):
+                item[key] = int(item[key])
+    return items
 
-def handle_patch_request(event):
-    # Update item in DynamoDB table
-    item_id = event['queryStringParameters']['id']
-    item = json.loads(event['body'])
-    update_expression = 'SET ' + ', '.join(f'#{k} = :{k}' for k in item.keys())
-    expression_attribute_names = {f'#{k}': k for k in item.keys()}
-    expression_attribute_values = {f':{k}': v for k, v in item.items()}
-    table.update_item(
-        Key={'id': item_id},
-        UpdateExpression=update_expression,
-        ExpressionAttributeNames=expression_attribute_names,
-        ExpressionAttributeValues=expression_attribute_values,
-    )
-    return {'statusCode': 200, 'body': 'Item updated successfully'}
+def separate_items_by_type(items):
+    ship_items = []
+    item_items = []
 
-def handle_put_request(event):
-    # Replace item in DynamoDB table
-    item = json.loads(event['body'])
-    table.put_item(Item=item)
-    return {'statusCode': 200, 'body': 'Item replaced successfully'}
+    for item in items:
+        if "SHIP" in item['SK']:
+            ship_items.append(item)
+        elif "ITEM" in item['SK']:
+            item_items.append(item)
 
-def handle_delete_request(event):
-    # Delete item from DynamoDB table
-    item_id = event['queryStringParameters']['id']
-    table.delete_item(Key={'id': item_id})
-    return {'statusCode': 200, 'body': 'Item deleted successfully'}
+    return ship_items, item_items
 
-'''
-import boto3
-import json
+def query_shipments_by_dates(table_name, org_id, start_date, end_date):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+    # print start and end dates
+    print(f"Querying on: ORG#{org_id} Start date: {start_date} End date: {end_date}")
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('your-table-name-here')
+    try:
+        response = table.query(
+            KeyConditionExpression= Key('GSI1PK').eq(f"ORG#{org_id}") & Key("GSI1SK").between(start_date, end_date),
+            IndexName='GSI1',
+        )
+    except ClientError as e:
+        print(f'ErrorCode: {e.response["Error"]["Code"]} Message: {e.response["Error"]["Message"]}')
 
-# Handler function for Lambda
-def lambda_handler(event, context):
-    http_method = event['httpMethod']
-    path_params = event['pathParameters']
-    query_params = event['queryStringParameters']
-    body_params = json.loads(event['body']) if event['body'] else None
+    # extract items from response
+    items = response['Items']
+
+    items = convert_decimals(items)
+    print(f"Items(converted): {items}")
+    # separate items by type
+    shipments, items = separate_items_by_type(items)
+
+    # Iterate over the shipments and get the items for each shipment based on the 'shipment_id' attribute in the item. 
+    # Add each related item to a new 'imtes' attribute in the shipment
+    for shipment in shipments:
+        shipment["id"] = shipment["SK"].split("#")[-1]
+        shipment['items'] = []
+        for item in items:
+            print("item.shipment_id: " + str(item['shipment_id']) + " shipment['id']: " + str(shipment['id']))
+            if shipment['id'] == str(item['shipment_id']):
+                shipment['items'].append(item)
     
-    if http_method == 'GET':
-        if path_params:
-            if 'id' in path_params:
-                item_id = path_params['id']
-                response = table.get_item(Key={'PK': f'SHIPMENT#{item_id}', 'SK': f'SHIPMENT#{item_id}'})
-                item = response.get('Item')
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps(item)
-                }
-            elif 'code' in path_params:
-                code = path_params['code']
-                response = table.get_item(Key={'PK': f'CARRIER#{code}', 'SK': f'CARRIER#{code}'})
-                item = response.get('Item')
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps(item)
-                }
-            elif 'name' in path_params:
-                name = path_params['name']
-                response = table.get_item(Key={'PK': f'SHIPMENT_STATUS#{name}', 'SK': f'SHIPMENT_STATUS#{name}'})
-                item = response.get('Item')
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps(item)
-                }
-        else:
-            response = table.scan()
-            items = response.get('Items')
-            return {
-                'statusCode': 200,
-                'body': json.dumps(items)
-            }
-    elif http_method == 'POST':
-        if 'id' in path_params and body_params:
-            item_id = path_params['id']
-            item_data = body_params['data']
-            table.put_item(Item={'PK': f'SHIPMENT#{item_id}', 'SK': f'SHIPMENT#{item_id}', 'data': item_data})
-            return {
-                'statusCode': 201,
-                'body': json.dumps({'message': 'Item created successfully.'})
-            }
-        else:
-            return {
-                'statusCode': 400,
-                'body': json.dumps({'message': 'Invalid request.'})
-            }
-    elif http_method == 'PUT' or http_method == 'PATCH':
-        if 'id' in path_params and body_params:
-            item_id = path_params['id']
-            item_data = body_params['data']
-            table.update_item(
-                Key={'PK': f'SHIPMENT#{item_id}', 'SK': f'SHIPMENT#{item_id}'},
-                UpdateExpression='SET #data = :data',
-                ExpressionAttributeNames={'#data': 'data'},
-                ExpressionAttributeValues={':data': item_data}
-            )
-            return {
-                'statusCode': 200,
-                'body': json.dumps({'message': 'Item updated successfully.'})
-            }
-        else:
-            return {
-                'statusCode': 400,
-                'body': json.dumps({'message': 'Invalid request.'})
-            }
-    elif http_method == 'DELETE':
-        if 'id' in path_params:
-            item_id = path_params['id']
-            table.delete_item(Key={'PK': f'SHIPMENT#{item_id}', 'SK': f'SHIPMENT#{item_id}'})
-            return {
-'''
+    # print shipments
+    print(f"Shipments: {shipments}")
+
+    return shipments
+
+# Get the AWS Cognito groups for the requesting user
+def get_user_group(event):
+    try:
+        group = event['requestContext']['authorizer']['claims']['cognito:groups']
+    except KeyError:
+        group = ""
+
+    return group
