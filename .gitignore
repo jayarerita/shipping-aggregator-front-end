@@ -23,7 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-*.js
 !jest.config.js
 *.d.ts
 node_modules

@@ -79,7 +79,6 @@ def query_shipments_by_dates(table_name, org_id, start_date, end_date):
         shipment["id"] = shipment["SK"].split("#")[-1]
         shipment['items'] = []
         for item in items:
-            print("item.shipment_id: " + str(item['shipment_id']) + " shipment['id']: " + str(shipment['id']))
             if shipment['id'] == str(item['shipment_id']):
                 shipment['items'].append(item)
     
