@@ -34,13 +34,13 @@ export default function TwoWeekCalendar (props) {
     }
 
     function sumPallets(day) {
-        let dayTotal =0;
+        let dayTotal = 0;
         let dayShipments = [];
         dayShipments = props.shipments.filter(shipment => shipment.est_delivery === day.date);
 
         dayShipments.forEach(shipment => {
             shipment.items.forEach(item => {
-                dayTotal += item.pallets;
+                dayTotal += parseInt(item.pallets);
             });
         });
         return dayTotal;

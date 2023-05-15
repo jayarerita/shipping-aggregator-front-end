@@ -44,9 +44,9 @@ def separate_items_by_type(items):
     item_items = []
 
     for item in items:
-        if "SHIP" in item['SK']:
+        if "SHIP" in item['SK'].split("#")[0]:
             ship_items.append(item)
-        elif "ITEM" in item['SK']:
+        elif "ITEM" in item['SK'].split("#")[0]:
             item_items.append(item)
 
     return ship_items, item_items
@@ -66,20 +66,20 @@ def query_shipments_by_dates(table_name, org_id, start_date, end_date):
         print(f'ErrorCode: {e.response["Error"]["Code"]} Message: {e.response["Error"]["Message"]}')
 
     # extract items from response
-    items = response['Items']
+    table_items = response['Items']
 
-    items = convert_decimals(items)
-    print(f"Items(converted): {items}")
+    table_items = convert_decimals(table_items)
+    #print(f"Items(converted): {items}")
     # separate items by type
-    shipments, items = separate_items_by_type(items)
+    shipments, items = separate_items_by_type(table_items)
 
     # Iterate over the shipments and get the items for each shipment based on the 'shipment_id' attribute in the item. 
     # Add each related item to a new 'imtes' attribute in the shipment
     for shipment in shipments:
-        shipment["id"] = shipment["SK"].split("#")[-1]
+        shipment["id"] = shipment["SK"]
         shipment['items'] = []
         for item in items:
-            if shipment['id'] == str(item['shipment_id']):
+            if shipment['SK'] == item['shipment_id']:
                 shipment['items'].append(item)
     
     # print shipments
