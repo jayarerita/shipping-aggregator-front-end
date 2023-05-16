@@ -8,4 +8,12 @@ export default defineConfig({
     host: true,
     port: 80,
   },
+  define: {
+    global: {}, //fix dev build
+  },
+  resolve: {
+    alias: {
+      "./runtimeConfig": "./runtimeConfig.browser", //fix production build
+    },
+  },
 })

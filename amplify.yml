@@ -1,0 +1,26 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.8 11
+        - /usr/local/bin/pip3.8 install --user pipenv
+        - amplifyPush --simple
+        - '# Execute Amplify CLI with the helper script'
+        - amplifyPush --simple
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm install
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    # IMPORTANT - Please verify your build output directory
+    baseDirectory: /dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*

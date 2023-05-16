@@ -57,7 +57,7 @@ export default function Shipment (props) {
     useEffect(() => {
         let pallets =0;
         props.items.forEach(item => {
-           pallets += item.pallets;
+           pallets += parseInt(item.pallets);
         });
         setTotalPallets(pallets)
     },[])
